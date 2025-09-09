@@ -19,6 +19,8 @@ export default function AddProviderForm({ onClose, onSuccess }: AddProviderFormP
     email: '',
     telefono: '',
     direccion: '',
+    ciudad: '',
+    pais: '',
     calificacion: '5',
     activo: true
   })
@@ -39,6 +41,8 @@ export default function AddProviderForm({ onClose, onSuccess }: AddProviderFormP
           email: formData.email,
           telefono: formData.telefono,
           direccion: formData.direccion,
+          ciudad: formData.ciudad,
+          pais: formData.pais,
           calificacion: parseFloat(formData.calificacion),
           activo: formData.activo
         }])

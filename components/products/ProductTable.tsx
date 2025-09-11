@@ -22,6 +22,7 @@ interface Product {
   ubicacion: string
   categoria_id: number | null
   proveedor_id: number | null
+  activo: boolean
   created_at: string
   categoria?: {
     nombre: string

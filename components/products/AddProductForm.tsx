@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -10,6 +10,16 @@ import { Package, Save, X } from 'lucide-react'
 interface AddProductFormProps {
   onClose: () => void
   onSuccess: () => void
+}
+
+interface Category {
+  id: number
+  nombre: string
+}
+
+interface Provider {
+  id: number
+  nombre: string
 }
 
 export default function AddProductForm({ onClose, onSuccess }: AddProductFormProps) {
@@ -26,6 +36,41 @@ export default function AddProductForm({ onClose, onSuccess }: AddProductFormPro
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [providers, setProviders] = useState<Provider[]>([])
+  const [loadingData, setLoadingData] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Cargar categorías
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categoria')
+          .select('id, nombre')
+          .order('nombre')
+
+        if (categoriesError) throw categoriesError
+
+        // Cargar proveedores
+        const { data: providersData, error: providersError } = await supabase
+          .from('proveedor')
+          .select('id, nombre')
+          .order('nombre')
+
+        if (providersError) throw providersError
+
+        setCategories(categoriesData || [])
+        setProviders(providersData || [])
+      } catch (error) {
+        console.error('Error loading data:', error)
+        setError('Error al cargar categorías y proveedores')
+      } finally {
+        setLoadingData(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,6 +127,12 @@ export default function AddProductForm({ onClose, onSuccess }: AddProductFormPro
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                 {error}
+              </div>
+            )}
+
+            {loadingData && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+                Cargando categorías y proveedores...
               </div>
             )}
 
@@ -173,28 +224,42 @@ export default function AddProductForm({ onClose, onSuccess }: AddProductFormPro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoría ID
+                  Categoría
                 </label>
-                <Input
+                <select
                   name="categoria_id"
-                  type="number"
                   value={formData.categoria_id}
                   onChange={handleChange}
-                  placeholder="ID de categoría"
-                />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mostaza-500 focus:border-transparent"
+                  disabled={loadingData}
+                >
+                  <option value="">Seleccionar categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Proveedor ID
+                  Proveedor
                 </label>
-                <Input
+                <select
                   name="proveedor_id"
-                  type="number"
                   value={formData.proveedor_id}
                   onChange={handleChange}
-                  placeholder="ID de proveedor"
-                />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mostaza-500 focus:border-transparent"
+                  disabled={loadingData}
+                >
+                  <option value="">Seleccionar proveedor</option>
+                  {providers.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

@@ -9,8 +9,6 @@ import {
   Package, 
   ShoppingCart, 
   Users, 
-  BarChart3, 
-  Bell, 
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -28,8 +26,6 @@ const navigation = [
   { name: 'Categorías', href: '/categorias', icon: Tag },
   { name: 'Movimientos', href: '/movimientos', icon: ShoppingCart },
   { name: 'Proveedores', href: '/proveedores', icon: Users },
-  { name: 'Reportes', href: '/reportes', icon: BarChart3 },
-  { name: 'Alertas', href: '/alertas', icon: Bell },
   { name: 'Mi Perfil', href: '/perfil', icon: UserIcon },
   { name: 'Configuración', href: '/configuracion', icon: Settings },
 ]

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -10,6 +10,13 @@ import { ArrowUpDown, Save, X } from 'lucide-react'
 interface AddMovementFormProps {
   onClose: () => void
   onSuccess: () => void
+}
+
+interface Product {
+  id: number
+  nombre: string
+  codigo: string
+  stock_actual: number
 }
 
 export default function AddMovementForm({ onClose, onSuccess }: AddMovementFormProps) {
@@ -22,6 +29,31 @@ export default function AddMovementForm({ onClose, onSuccess }: AddMovementFormP
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [products, setProducts] = useState<Product[]>([])
+  const [loadingData, setLoadingData] = useState(true)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('producto')
+          .select('id, nombre, codigo, stock_actual')
+          .order('nombre')
+
+        if (error) throw error
+
+        setProducts(data || [])
+      } catch (error) {
+        console.error('Error loading products:', error)
+        setError('Error al cargar productos')
+      } finally {
+        setLoadingData(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,17 +61,67 @@ export default function AddMovementForm({ onClose, onSuccess }: AddMovementFormP
     setError('')
 
     try {
-      const { error } = await supabase
+      const cantidad = parseInt(formData.cantidad)
+      const productoId = parseInt(formData.producto_id)
+
+      // Crear el movimiento
+      const { error: movimientoError } = await supabase
         .from('movimiento')
         .insert([{
-          producto_id: parseInt(formData.producto_id),
+          producto_id: productoId,
           tipo: formData.tipo,
-          cantidad: parseInt(formData.cantidad),
+          cantidad: cantidad,
           motivo: formData.motivo,
           observaciones: formData.notas
         }])
 
-      if (error) throw error
+      if (movimientoError) throw movimientoError
+
+      // Actualizar el stock del producto
+      const { data: productoActual, error: productoError } = await supabase
+        .from('producto')
+        .select('stock_actual')
+        .eq('id', productoId)
+        .single()
+
+      if (productoError) throw productoError
+
+      let nuevoStock = productoActual.stock_actual
+
+      // Calcular nuevo stock según el tipo de movimiento
+      switch (formData.tipo) {
+        case 'entrada':
+          nuevoStock += cantidad
+          break
+        case 'salida':
+          nuevoStock -= cantidad
+          // Validar que no quede stock negativo
+          if (nuevoStock < 0) {
+            throw new Error(`No hay suficiente stock. Stock actual: ${productoActual.stock_actual}, intentando sacar: ${cantidad}`)
+          }
+          break
+        case 'ajuste':
+          nuevoStock = cantidad // El ajuste establece el stock exacto
+          break
+        case 'transferencia':
+          // Para transferencias, asumimos que es una salida
+          nuevoStock -= cantidad
+          // Validar que no quede stock negativo
+          if (nuevoStock < 0) {
+            throw new Error(`No hay suficiente stock para transferir. Stock actual: ${productoActual.stock_actual}, intentando transferir: ${cantidad}`)
+          }
+          break
+        default:
+          throw new Error('Tipo de movimiento no válido')
+      }
+
+      // Actualizar el stock en la base de datos
+      const { error: updateError } = await supabase
+        .from('producto')
+        .update({ stock_actual: nuevoStock })
+        .eq('id', productoId)
+
+      if (updateError) throw updateError
 
       onSuccess()
       onClose()
@@ -51,10 +133,18 @@ export default function AddMovementForm({ onClose, onSuccess }: AddMovementFormP
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+
+    // Si se selecciona un producto, actualizar el estado del producto seleccionado
+    if (name === 'producto_id') {
+      const product = products.find(p => p.id === parseInt(value))
+      setSelectedProduct(product || null)
+    }
   }
 
   return (
@@ -77,19 +167,40 @@ export default function AddMovementForm({ onClose, onSuccess }: AddMovementFormP
               </div>
             )}
 
+            {loadingData && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+                Cargando productos...
+              </div>
+            )}
+
+            {selectedProduct && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                <strong>Producto seleccionado:</strong> {selectedProduct.nombre} ({selectedProduct.codigo})
+                <br />
+                <strong>Stock actual:</strong> {selectedProduct.stock_actual} unidades
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Producto ID *
+                  Producto *
                 </label>
-                <Input
+                <select
                   name="producto_id"
-                  type="number"
                   value={formData.producto_id}
                   onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mostaza-500 focus:border-transparent"
                   required
-                  placeholder="ID del producto"
-                />
+                  disabled={loadingData}
+                >
+                  <option value="">Seleccionar producto</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.nombre} ({product.codigo}) - Stock: {product.stock_actual}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

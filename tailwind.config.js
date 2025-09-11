@@ -32,11 +32,71 @@ module.exports = {
           800: '#5b21b6',
           900: '#4c1d95',
         },
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    // Plugin para purgar estilos no utilizados
+    function({ addUtilities }) {
+      addUtilities({
+        '.btn': {
+          '@apply inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none': {},
+        },
+        '.btn-primary': {
+          '@apply bg-mostaza-500 text-white hover:bg-mostaza-600': {},
+        },
+        '.btn-secondary': {
+          '@apply bg-gray-200 text-gray-900 hover:bg-gray-300': {},
+        },
+        '.btn-outline': {
+          '@apply border border-gray-300 bg-white hover:bg-gray-50': {},
+        },
+      })
+    },
+  ],
+  // Optimizaciones de rendimiento
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 }

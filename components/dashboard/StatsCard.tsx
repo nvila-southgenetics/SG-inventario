@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { LucideIcon } from 'lucide-react'
 
@@ -8,15 +9,17 @@ interface StatsCardProps {
   changeType?: 'positive' | 'negative' | 'neutral'
   icon: LucideIcon
   color?: 'mostaza' | 'violeta' | 'blue' | 'green' | 'red'
+  loading?: boolean
 }
 
-export default function StatsCard({
+const StatsCard = memo(function StatsCard({
   title,
   value,
   change,
   changeType = 'neutral',
   icon: Icon,
-  color = 'mostaza'
+  color = 'mostaza',
+  loading = false
 }: StatsCardProps) {
   const colorClasses = {
     mostaza: 'bg-mostaza-50 text-mostaza-600',
@@ -43,13 +46,24 @@ export default function StatsCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        {change && (
-          <p className={`text-xs ${changeClasses[changeType]} mt-1`}>
-            {change}
-          </p>
+        {loading ? (
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        ) : (
+          <>
+            <div className="text-2xl font-bold text-gray-900">{value}</div>
+            {change && (
+              <p className={`text-xs ${changeClasses[changeType]} mt-1`}>
+                {change}
+              </p>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
   )
-}
+})
+
+export default StatsCard

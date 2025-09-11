@@ -1,9 +1,9 @@
-import { InputHTMLAttributes, forwardRef } from 'react'
+import { InputHTMLAttributes, forwardRef, memo } from 'react'
 import { clsx } from 'clsx'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
+const Input = memo(forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
       <input
@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       />
     )
   }
-)
+))
 Input.displayName = 'Input'
 
 export { Input }

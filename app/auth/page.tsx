@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import LoginForm from '@/components/auth/LoginForm'
 import RegisterForm from '@/components/auth/RegisterForm'
+import SupabaseConnectionTest from '@/components/auth/SupabaseConnectionTest'
 import { Loader2 } from 'lucide-react'
 
 export default function AuthPage() {
@@ -35,7 +36,10 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-mostaza-50 to-violeta-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-4">
+        {/* Mostrar test de conexión en desarrollo */}
+        {process.env.NODE_ENV === 'development' && <SupabaseConnectionTest />}
+        
         {isLogin ? (
           <LoginForm onToggleMode={() => setIsLogin(false)} />
         ) : (

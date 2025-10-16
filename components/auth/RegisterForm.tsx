@@ -52,16 +52,32 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
       return
     }
 
-    const { error } = await signUp(formData.email, formData.password, {
-      nombre: formData.nombre,
-      rol: 'usuario'
-    })
-    
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      setSuccess(true)
+    try {
+      const { error } = await signUp(formData.email, formData.password, {
+        nombre: formData.nombre,
+        rol: 'usuario'
+      })
+      
+      if (error) {
+        console.error('Error en registro:', error)
+        
+        // Mensajes de error más específicos
+        if (error.message.includes('User already registered')) {
+          setError('Este email ya está registrado. Por favor, inicia sesión o usa otro email.')
+        } else if (error.message.includes('repeated_signup')) {
+          setError('Este email ya está registrado. Revisa tu bandeja de entrada para confirmar tu cuenta.')
+        } else {
+          setError(error.message || 'Error al registrar usuario. Por favor, intenta de nuevo.')
+        }
+        setLoading(false)
+      } else {
+        console.log('Registro exitoso')
+        setSuccess(true)
+        setLoading(false)
+      }
+    } catch (err: any) {
+      console.error('Error inesperado:', err)
+      setError('Error de conexión. Verifica tu conexión a internet y las credenciales de Supabase.')
       setLoading(false)
     }
   }
@@ -74,16 +90,36 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
           <h2 className="text-xl font-bold text-gray-900 mb-2">
             ¡Registro Exitoso!
           </h2>
-          <p className="text-gray-600 mb-4">
-            Revisa tu email para confirmar tu cuenta
-          </p>
-          <Button
-            onClick={onToggleMode}
-            variant="outline"
-            className="w-full"
-          >
-            Volver al Login
-          </Button>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-blue-800 font-medium mb-2">
+              ⚠️ Importante: Confirmación de Email
+            </p>
+            <p className="text-blue-700 text-sm mb-2">
+              Revisa tu bandeja de entrada y haz clic en el enlace de confirmación que te enviamos a:
+            </p>
+            <p className="text-blue-900 font-medium text-sm mb-2">
+              {formData.email}
+            </p>
+            <p className="text-blue-600 text-xs">
+              Si no ves el email, revisa la carpeta de spam o correo no deseado.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Button
+              onClick={onToggleMode}
+              variant="primary"
+              className="w-full"
+            >
+              Ir al Login
+            </Button>
+            <Button
+              onClick={() => setSuccess(false)}
+              variant="outline"
+              className="w-full"
+            >
+              Registrar Otro Usuario
+            </Button>
+          </div>
         </CardContent>
       </Card>
     )
